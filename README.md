@@ -1,10 +1,23 @@
+<div align="center">
+<img src="assets/hero.svg" width="100%"/>
+</div>
+
 # agent-log
 
-**Structured JSON logging for LLM agents.** Zero dependencies. Python ≥ 3.10.
+**Structured JSON logging for LLM agents. Zero external dependencies.**
 
-Stop grepping through walls of text. Every agent decision becomes a queryable, filterable, correlation-traceable JSON record.
+[![PyPI](https://img.shields.io/pypi/v/agent-log?color=blue)](https://pypi.org/project/agent-log/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Zero deps](https://img.shields.io/badge/dependencies-zero-brightgreen)](pyproject.toml)
 
 ---
+
+## The Problem
+
+Production LLM agents fail silently. Without structured json logging, you get undefined behaviour at scale — race conditions, lost state, cascading failures, and no way to debug what went wrong.
+
+`agent-log` gives you a production-ready structured json logging primitive with a clean API, tested edge cases, and zero configuration.
 
 ## Installation
 
@@ -12,113 +25,88 @@ Stop grepping through walls of text. Every agent decision becomes a queryable, f
 pip install agent-log
 ```
 
----
+Or from source:
+
+```bash
+git clone https://github.com/darshjme/agent-log.git
+cd agent-log
+pip install -e .
+```
 
 ## Quick Start
 
 ```python
-from agent_log import AgentLogger, InMemoryHandler
+from agent_log import *  # see API reference below
 
-# Basic structured logging
-logger = AgentLogger("my-agent", level="DEBUG", correlation_id="req-42")
-
-logger.info("Agent started", model="gpt-4o", task="summarise")
-logger.debug("Calling tool", tool="web_search", query="structured logging python")
-logger.warning("Rate limit approaching", remaining=5)
-logger.error("Tool call failed", tool="web_search", status=429)
+# See examples/ directory for complete working examples
 ```
-
-Each call prints to stdout:
-
-```json
-{"timestamp": 1711234567.89, "level": "INFO", "logger": "my-agent", "message": "Agent started", "correlation_id": "req-42", "model": "gpt-4o", "task": "summarise"}
-{"timestamp": 1711234568.01, "level": "DEBUG", "logger": "my-agent", "message": "Calling tool", "correlation_id": "req-42", "tool": "web_search", "query": "structured logging python"}
-```
-
----
-
-## Bind Persistent Fields
-
-```python
-step_logger = logger.bind(step=1, agent_version="2.0")
-step_logger.info("Reasoning started")   # always has step=1, agent_version="2.0"
-step_logger.info("Reasoning complete", tokens_used=312)
-```
-
----
-
-## Correlation IDs
-
-```python
-request_logger = logger.with_correlation("trace-abc-123")
-request_logger.info("Processing request")
-request_logger.error("Unexpected tool output", tool="calculator")
-```
-
----
-
-## In-Memory Handler (for testing)
-
-```python
-from agent_log import AgentLogger, InMemoryHandler
-
-handler = InMemoryHandler(level="DEBUG")
-logger = AgentLogger("agent", level="DEBUG")
-logger.add_handler(handler)
-
-logger.info("step 1", phase="planning")
-logger.error("step 2 failed", phase="execution", code=500)
-
-# Filter by level
-errors = handler.filter(level="ERROR")
-assert errors[0].fields["code"] == 500
-
-# Filter by correlation ID
-from agent_log import AgentLogger, InMemoryHandler
-h = InMemoryHandler()
-a = AgentLogger("svc"); a.add_handler(h)
-b = a.with_correlation("run-99")
-b.info("started"); b.info("done")
-run_records = h.filter(correlation_id="run-99")
-assert len(run_records) == 2
-```
-
----
 
 ## API Reference
 
-### `AgentLogger(name, level="INFO", correlation_id=None)`
+The main classes and functions are defined in `agent_log/__init__.py`.
 
-| Method | Description |
-|--------|-------------|
-| `debug/info/warning/error/critical(msg, **fields)` | Log at given level with optional context fields |
-| `bind(**fields) -> AgentLogger` | New logger with fields always attached |
-| `with_correlation(id) -> AgentLogger` | New logger with fixed correlation_id |
-| `add_handler(handler)` | Attach a `LogHandler`; if none attached, logs to stdout |
+Key exports: `AgentLogger · correlation IDs · InMemoryHandler · bind/filter`
 
-### `LogRecord`
+All classes follow a consistent interface:
+- Instantiate with sensible defaults
+- Compose with other arsenal libraries
+- Zero external dependencies required
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `timestamp` | `float` | `time.time()` at creation |
-| `level` | `str` | Uppercase level string |
-| `message` | `str` | Log message |
-| `logger_name` | `str` | Logger name |
-| `fields` | `dict` | Extra context fields |
-| `correlation_id` | `str \| None` | Correlation/trace ID |
-| `to_dict()` | `dict` | Flat dict (JSON-serialisable) |
-| `to_json()` | `str` | JSON string |
+See the source code and `tests/` directory for verified usage examples.
 
-### `InMemoryHandler(level="DEBUG", max_size=1000)`
+## How It Works
 
-| Method | Description |
-|--------|-------------|
-| `records` | All stored `LogRecord`s |
-| `filter(level=None, correlation_id=None)` | Filtered subset |
-| `clear()` | Wipe all records |
+```mermaid
+flowchart LR
+    A[Agent Task] --> B[agent-log]
+    B --> C{Decision}
+    C -->|success| D[✅ Result]
+    C -->|failure| E[⚠️ Handle]
+    E --> B
+
+    style B fill:#161b22,stroke:#1f6feb,stroke-width:2,color:#1f6feb
+    style D fill:#1a3320,stroke:#238636,color:#3fb950
+    style E fill:#3d1a1a,stroke:#f85149,color:#f85149
+```
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant AgentLog as agent-log
+    participant Output
+
+    Agent->>AgentLog: initialize()
+    AgentLog-->>Agent: ready
+
+    loop Agent Run
+        Agent->>AgentLog: process(input)
+        AgentLog-->>Agent: result
+    end
+
+    Agent->>Output: deliver(result)
+```
+
+## Philosophy
+
+*Satyam vada* — speak truth. agent-log ensures every action is recorded truthfully.
 
 ---
 
-## License
+## Part of the Arsenal
 
-MIT
+`agent-log` is one of six production libraries for LLM agents:
+
+| Library | Purpose |
+|---------|---------|
+| [herald](https://github.com/darshjme/herald) | Semantic task routing |
+| [engram](https://github.com/darshjme/engram) | Agent memory |
+| [sentinel](https://github.com/darshjme/sentinel) | ReAct loop guards |
+| [verdict](https://github.com/darshjme/verdict) | Agent evaluation |
+| [agent-guardrails](https://github.com/darshjme/agent-guardrails) | Output validation |
+| [agent-observability](https://github.com/darshjme/agent-observability) | Tracing & metrics |
+
+→ [arsenal](https://github.com/darshjme/arsenal) — the complete stack
+
+---
+
+*Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*
