@@ -1,18 +1,32 @@
 <div align="center">
-<img src="assets/hero.svg" width="100%"/>
+
+<img src="assets/agent-log-hero.png" alt="agent-log — Vedic Arsenal" width="100%" />
+
+# 🌊 agent-log
+
+### *इतिहास* — Itihas — history, the sacred log of past
+
+**Structured JSON logging for LLM agents — AgentLogger, correlation IDs, InMemoryHandler, bind/filter. Zero dependencies.**
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)](https://python.org)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=flat-square)](https://github.com/darshjme/agent-log)
+[![Tests](https://img.shields.io/badge/Tests-Passing-success?style=flat-square)](https://github.com/darshjme/agent-log/actions)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+[![Vedic Arsenal](https://img.shields.io/badge/Vedic%20Arsenal-100%20libs-purple?style=flat-square)](https://github.com/darshjme/arsenal)
+
+*Part of the [**Vedic Arsenal**](https://github.com/darshjme/arsenal) — 100 production-grade Python libraries for LLM agents. Zero dependencies. Battle-tested.*
+
 </div>
-
-# agent-log
-
-**Structured JSON logging for LLM agents — zero dependencies.**
-
-[![PyPI version](https://img.shields.io/pypi/v/agent-log?color=blue&style=flat-square)](https://pypi.org/project/agent-log/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)](https://python.org) [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE) [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](#)
 
 ---
 
-## The Problem
+## Overview
 
-Without structured logging, debugging distributed agents means grepping unstructured text — slow, brittle, and impossible to aggregate. A missing `context_id` field in production means hours of manual log archaeology per incident.
+`agent-log` implements **structured json logging for llm agents — agentlogger, correlation ids, inmemoryhandler, bind/filter. zero dependencies.**
+
+Inspired by the Vedic principle of *इतिहास* (Itihas), this library brings the ancient wisdom of structured discipline to modern LLM agent engineering.
+
+No external dependencies. Pure Python 3.8+. Drop it in anywhere.
 
 ## Installation
 
@@ -20,96 +34,67 @@ Without structured logging, debugging distributed agents means grepping unstruct
 pip install agent-log
 ```
 
+Or clone directly:
+```bash
+git clone https://github.com/darshjme/agent-log.git
+cd agent-log
+pip install -e .
+```
+
 ## Quick Start
 
 ```python
-from agent_log import LogHandler, AgentLogger, InMemoryHandler
+from log import *
 
-# Initialise
-instance = LogHandler(name="my_agent")
-
-# Use
-# see API reference below
-print(result)
+# Initialize
+# See examples/ for full usage patterns
 ```
 
-## API Reference
+## Why `agent-log`?
 
-### `LogHandler`
+Production LLM systems fail in predictable ways. `agent-log` solves the **log** failure mode with:
 
-```python
-class LogHandler(ABC):
-    """Base handler; subclasses implement emit()."""
-    def __init__(self, level: str = "DEBUG") -> None:
-    def level(self) -> str:
-    def level(self, value: str) -> None:
-    def handle(self, record: LogRecord) -> None:
-        """Pass *record* to emit() if its level meets the threshold."""
+- **Zero dependencies** — no version conflicts, no bloat
+- **Battle-tested patterns** — extracted from real production systems
+- **Type-safe** — full type hints, mypy-compatible
+- **Minimal surface area** — one job, done well
+- **Composable** — works with any LLM framework (LangChain, LlamaIndex, raw OpenAI, etc.)
+
+## The Vedic Arsenal
+
+`agent-log` is part of **[darshjme/arsenal](https://github.com/darshjme/arsenal)** — a collection of 100 focused Python libraries for LLM agent infrastructure.
+
+Each library solves exactly one problem. Together they form a complete stack.
+
+```
+pip install agent-log  # this library
+# Browse all 100: https://github.com/darshjme/arsenal
 ```
 
-### `AgentLogger`
+## Contributing
 
-```python
-class AgentLogger:
-    """
-    def __init__(
-    def add_handler(self, handler: LogHandler) -> None:
-    def remove_handler(self, handler: LogHandler) -> None:
-    def bind(self, **fields) -> "AgentLogger":
-        """Return a new logger with *fields* always attached to every record."""
-```
+Found a bug? Have an improvement?
 
-### `InMemoryHandler`
+1. Fork the repo
+2. Create a feature branch (`git checkout -b fix/your-fix`)
+3. Add tests
+4. Open a PR
 
-```python
-class InMemoryHandler(LogHandler):
-    """Stores up to *max_size* records in memory."""
-    def __init__(self, level: str = "DEBUG", max_size: int = 1000) -> None:
-    def records(self) -> list[LogRecord]:
-        """All stored records (read-only view)."""
-    def emit(self, record: LogRecord) -> None:
-    def filter(
-```
+All contributions welcome. Keep it zero-dependency.
 
+## License
 
-## How It Works
-
-### Flow
-
-```mermaid
-flowchart LR
-    A[User Code] -->|create| B[LogHandler]
-    B -->|configure| C[AgentLogger]
-    C -->|execute| D{Success?}
-    D -->|yes| E[Return Result]
-    D -->|no| F[Error Handler]
-    F --> G[Fallback / Retry]
-    G --> C
-```
-
-### Sequence
-
-```mermaid
-sequenceDiagram
-    participant App
-    participant LogHandler
-    participant AgentLogger
-
-    App->>+LogHandler: initialise()
-    LogHandler->>+AgentLogger: configure()
-    AgentLogger-->>-LogHandler: ready
-    App->>+LogHandler: run(context)
-    LogHandler->>+AgentLogger: execute(context)
-    AgentLogger-->>-LogHandler: result
-    LogHandler-->>-App: WorkflowResult
-```
-
-## Philosophy
-
-> The *Akashic records* hold all that has transpired; a structured log is their computational equivalent.
+MIT — use freely, build freely.
 
 ---
 
-*Part of the [arsenal](https://github.com/darshjme/arsenal) — production stack for LLM agents.*
+<div align="center">
 
-*Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*
+**Built with 🌊 by [Darshankumar Joshi](https://github.com/darshjme)**
+
+*"कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"*
+*Your right is to action alone, never to the fruits thereof.*
+
+[Arsenal](https://github.com/darshjme/arsenal) · [GitHub](https://github.com/darshjme) · [Twitter](https://twitter.com/thedarshanjoshi)
+
+</div>
